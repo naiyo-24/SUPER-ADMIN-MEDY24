@@ -476,7 +476,7 @@ class _PathoLabDetailsScreenState extends ConsumerState<PathoLabDetailsScreen> {
                       value: _status,
                       isExpanded: true,
                       onChanged: (v) => setState(() => _status = v!),
-                      items: ['active', 'suspended', 'terminated'].map((s) => DropdownMenuItem(value: s, child: Text(s.toUpperCase()))).toList(),
+                      items: ['pending', 'active', 'suspended', 'terminated'].map((s) => DropdownMenuItem(value: s, child: Text(s.toUpperCase()))).toList(),
                     ),
                   ),
                 )
