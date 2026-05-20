@@ -35,12 +35,16 @@ class MedicineServices {
         },
       );
       
-      final data = response.data['data'] as List;
+      final raw = response.data['data'] as List;
+      final medicines = raw.map((item) {
+        final map = Map<String, dynamic>.from(item as Map);
+        return Medicine.fromJson(map);
+      }).toList();
       return {
         'total': response.data['total'],
         'page': response.data['page'],
         'limit': response.data['limit'],
-        'medicines': data.map((json) => Medicine.fromJson(json)).toList(),
+        'medicines': medicines,
       };
     } catch (e) {
       throw Exception('Failed to fetch medicines: $e');
@@ -50,7 +54,8 @@ class MedicineServices {
   Future<Medicine> getMedicineById(String medicineId) async {
     try {
       final response = await _dio.get('${ApiUrls.medicineGetById}/$medicineId');
-      return Medicine.fromJson(response.data);
+      final map = Map<String, dynamic>.from(response.data as Map);
+      return Medicine.fromJson(map);
     } catch (e) {
       throw Exception('Failed to fetch medicine details: $e');
     }
@@ -61,6 +66,7 @@ class MedicineServices {
     required String medicineCategory,
     required String medicineQuantity,
     required double mrp,
+    double? discountPercent,
     String? medicineDescription,
     String? medicineComposition,
     String? precautions,
@@ -68,16 +74,25 @@ class MedicineServices {
     String? photoFileName,
   }) async {
     try {
-      final formDataMap = {
+      final formDataMap = <String, dynamic>{
         'medicine_name': medicineName,
         'medicine_category': medicineCategory,
         'medicine_quantity': medicineQuantity,
         'mrp': mrp.toString(),
       };
-      
-      if (medicineDescription != null) formDataMap['medicine_description'] = medicineDescription;
-      if (medicineComposition != null) formDataMap['medicine_composition'] = medicineComposition;
-      if (precautions != null) formDataMap['precautions'] = precautions;
+
+      if (discountPercent != null) {
+        formDataMap['discount_percent'] = discountPercent.toString();
+      }
+      if (medicineDescription != null && medicineDescription.isNotEmpty) {
+        formDataMap['medicine_description'] = medicineDescription;
+      }
+      if (medicineComposition != null && medicineComposition.isNotEmpty) {
+        formDataMap['medicine_composition'] = medicineComposition;
+      }
+      if (precautions != null && precautions.isNotEmpty) {
+        formDataMap['precautions'] = precautions;
+      }
 
       final formData = FormData.fromMap(formDataMap);
 
@@ -95,7 +110,8 @@ class MedicineServices {
         ApiUrls.medicineCreate,
         data: formData,
       );
-      return Medicine.fromJson(response.data);
+      final map = Map<String, dynamic>.from(response.data as Map);
+      return Medicine.fromJson(map);
     } on DioException catch (e) {
       if (e.response != null && e.response?.data != null) {
         throw Exception(e.response?.data['detail'] ?? 'Failed to create medicine');
@@ -112,6 +128,7 @@ class MedicineServices {
     String? medicineCategory,
     String? medicineQuantity,
     double? mrp,
+    double? discountPercent,
     String? medicineDescription,
     String? medicineComposition,
     String? precautions,
@@ -120,13 +137,20 @@ class MedicineServices {
   }) async {
     try {
       final formDataMap = <String, dynamic>{};
-      
+
       if (medicineName != null) formDataMap['medicine_name'] = medicineName;
       if (medicineCategory != null) formDataMap['medicine_category'] = medicineCategory;
       if (medicineQuantity != null) formDataMap['medicine_quantity'] = medicineQuantity;
       if (mrp != null) formDataMap['mrp'] = mrp.toString();
-      if (medicineDescription != null) formDataMap['medicine_description'] = medicineDescription;
-      if (medicineComposition != null) formDataMap['medicine_composition'] = medicineComposition;
+      if (discountPercent != null) {
+        formDataMap['discount_percent'] = discountPercent.toString();
+      }
+      if (medicineDescription != null) {
+        formDataMap['medicine_description'] = medicineDescription;
+      }
+      if (medicineComposition != null) {
+        formDataMap['medicine_composition'] = medicineComposition;
+      }
       if (precautions != null) formDataMap['precautions'] = precautions;
 
       final formData = FormData.fromMap(formDataMap);
@@ -145,7 +169,8 @@ class MedicineServices {
         '${ApiUrls.medicineUpdateById}/$medicineId',
         data: formData,
       );
-      return Medicine.fromJson(response.data);
+      final map = Map<String, dynamic>.from(response.data as Map);
+      return Medicine.fromJson(map);
     } on DioException catch (e) {
       if (e.response != null && e.response?.data != null) {
         throw Exception(e.response?.data['detail'] ?? 'Failed to update medicine');
@@ -161,6 +186,9 @@ class MedicineServices {
       await _dio.delete(
         ApiUrls.medicineDeleteByIds,
         data: medicineIds,
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+        ),
       );
     } catch (e) {
       throw Exception('Failed to delete medicines: $e');

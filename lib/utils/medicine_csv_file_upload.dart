@@ -59,6 +59,7 @@ class MedicineCsvFileUpload {
         final categoryIndex = headers.indexOf('medicine_category');
         final quantityIndex = headers.indexOf('medicine_quantity');
         final mrpIndex = headers.indexOf('mrp');
+        final discountIndex = headers.indexOf('discount_percent');
         final descIndex = headers.indexOf('medicine_description');
         final compIndex = headers.indexOf('medicine_composition');
         final precIndex = headers.indexOf('precautions');
@@ -95,6 +96,14 @@ class MedicineCsvFileUpload {
           final mrpStr = values[mrpIndex].trim();
           final mrp = double.tryParse(mrpStr) ?? 0.0;
 
+          double? discountPercent;
+          if (discountIndex != -1 && values.length > discountIndex) {
+            final dStr = values[discountIndex].trim();
+            if (dStr.isNotEmpty) {
+              discountPercent = double.tryParse(dStr);
+            }
+          }
+
           String? desc;
           if (descIndex != -1 && values.length > descIndex) {
             desc = values[descIndex].trim();
@@ -118,16 +127,20 @@ class MedicineCsvFileUpload {
 
           if (name.isNotEmpty && category.isNotEmpty) {
             try {
-              await notifier.createMedicine(
+              final created = await notifier.createMedicine(
                 medicineName: name,
                 medicineCategory: category,
                 medicineQuantity: quantity,
                 mrp: mrp,
+                discountPercent:
+                    (discountPercent != null && discountPercent > 0)
+                        ? discountPercent
+                        : null,
                 medicineDescription: desc,
                 medicineComposition: comp,
                 precautions: precJson,
               );
-              successCount++;
+              if (created != null) successCount++;
             } catch (e) {
               if (kDebugMode) {
                 print('Error creating medicine row $i: $e');

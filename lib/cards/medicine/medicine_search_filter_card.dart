@@ -115,7 +115,7 @@ class _MedicineSearchFilterCardState
               Expanded(
                 child: DropdownButtonFormField<String>(
                   decoration: AppTheme.inputDecoration(
-                    'Price Range',
+                    'Selling price',
                   ).copyWith(filled: true, fillColor: AppColors.background),
                   items: const [
                     DropdownMenuItem(value: 'All', child: Text('All Prices')),

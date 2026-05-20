@@ -6,6 +6,8 @@ class Medicine {
   final String medicineCategory;
   final String medicineQuantity;
   final double mrp;
+  final double? discountPercent;
+  final double finalSellingPrice;
   final String? medicineDescription;
   final String? medicineComposition;
   final List<dynamic> precautions;
@@ -17,23 +19,47 @@ class Medicine {
     required this.medicineCategory,
     required this.medicineQuantity,
     required this.mrp,
+    this.discountPercent,
+    required this.finalSellingPrice,
     this.medicineDescription,
     this.medicineComposition,
     required this.precautions,
     this.medicinePhoto,
   });
 
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  static double _parseNonNullDouble(dynamic value, [double fallback = 0.0]) {
+    return _parseDouble(value) ?? fallback;
+  }
+
   factory Medicine.fromJson(Map<String, dynamic> json) {
+    final mrp = _parseNonNullDouble(json['mrp']);
+    final discount = _parseDouble(json['discount_percent']);
+    final inferredFinal = discount == null
+        ? mrp
+        : mrp - (mrp * discount / 100);
+    final finalPrice =
+        _parseDouble(json['final_selling_price']) ?? inferredFinal;
+
     return Medicine(
       medicineId: json['medicine_id'] ?? '',
       medicineName: json['medicine_name'] ?? '',
       medicineCategory: json['medicine_category'] ?? '',
       medicineQuantity: json['medicine_quantity'] ?? '',
-      mrp: json['mrp'] is int ? (json['mrp'] as int).toDouble() : (json['mrp'] ?? 0.0),
+      mrp: mrp,
+      discountPercent: discount,
+      finalSellingPrice: finalPrice,
       medicineDescription: json['medicine_description'],
       medicineComposition: json['medicine_composition'],
-      precautions: json['precautions'] is String 
-          ? jsonDecode(json['precautions']) 
+      precautions: json['precautions'] is String
+          ? jsonDecode(json['precautions'])
           : (json['precautions'] ?? []),
       medicinePhoto: json['medicine_photo'],
     );
@@ -46,6 +72,8 @@ class Medicine {
       'medicine_category': medicineCategory,
       'medicine_quantity': medicineQuantity,
       'mrp': mrp,
+      'discount_percent': discountPercent,
+      'final_selling_price': finalSellingPrice,
       'medicine_description': medicineDescription,
       'medicine_composition': medicineComposition,
       'precautions': precautions,

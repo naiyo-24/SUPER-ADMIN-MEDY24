@@ -103,7 +103,10 @@ class MedicineManagementTableCard extends ConsumerWidget {
             DataColumn(label: Text('ID')),
             DataColumn(label: Text('NAME')),
             DataColumn(label: Text('CATEGORY')),
+            DataColumn(label: Text('QTY')),
             DataColumn(label: Text('MRP (₹)')),
+            DataColumn(label: Text('DISC %')),
+            DataColumn(label: Text('FINAL (₹)')),
             DataColumn(label: Text('DESCRIPTION')),
             DataColumn(label: Text('COMPOSITION')),
             DataColumn(label: Text('PRECAUTIONS')),
@@ -185,10 +188,33 @@ class MedicineManagementTableCard extends ConsumerWidget {
                 ),
                 DataCell(
                   Text(
+                    medicine.medicineQuantity,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                DataCell(
+                  Text(
                     '₹${medicine.mrp.toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: AppColors.success,
                       fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    medicine.discountPercent != null
+                        ? '${medicine.discountPercent!.toStringAsFixed(1)}%'
+                        : '—',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    '₹${medicine.finalSellingPrice.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
@@ -216,7 +242,7 @@ class MedicineManagementTableCard extends ConsumerWidget {
                   SizedBox(
                     width: 150,
                     child: Text(
-                      medicine.precautions.join(', '),
+                      medicine.precautions.map((e) => e.toString()).join(', '),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 2,
                     ),

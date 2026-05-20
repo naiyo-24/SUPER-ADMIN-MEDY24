@@ -23,6 +23,7 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
   late TextEditingController _categoryController;
   late TextEditingController _quantityController;
   late TextEditingController _mrpController;
+  late TextEditingController _discountController;
   late TextEditingController _descriptionController;
   late TextEditingController _compositionController;
   late TextEditingController _precautionsController;
@@ -37,6 +38,11 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
     _categoryController = TextEditingController(text: widget.medicine?.medicineCategory ?? '');
     _quantityController = TextEditingController(text: widget.medicine?.medicineQuantity ?? '');
     _mrpController = TextEditingController(text: widget.medicine?.mrp.toString() ?? '');
+    _discountController = TextEditingController(
+      text: widget.medicine?.discountPercent != null
+          ? widget.medicine!.discountPercent!.toString()
+          : '',
+    );
     _descriptionController = TextEditingController(text: widget.medicine?.medicineDescription ?? '');
     _compositionController = TextEditingController(text: widget.medicine?.medicineComposition ?? '');
     
@@ -53,6 +59,7 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
     _categoryController.dispose();
     _quantityController.dispose();
     _mrpController.dispose();
+    _discountController.dispose();
     _descriptionController.dispose();
     _compositionController.dispose();
     _precautionsController.dispose();
@@ -79,6 +86,12 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
 
     try {
       final mrp = double.tryParse(_mrpController.text) ?? 0.0;
+      final discountRaw = _discountController.text.trim();
+      double? discountPercent;
+      if (discountRaw.isNotEmpty) {
+        discountPercent = double.tryParse(discountRaw);
+      }
+
       final precautionsList = _precautionsController.text
           .split(',')
           .map((e) => e.trim())
@@ -89,42 +102,56 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
 
       final notifier = ref.read(medicineNotifierProvider.notifier);
 
+      bool ok;
       if (widget.medicine == null) {
-        // Create
-        await notifier.createMedicine(
+        final created = await notifier.createMedicine(
           medicineName: _nameController.text,
           medicineCategory: _categoryController.text,
           medicineQuantity: _quantityController.text,
           mrp: mrp,
+          discountPercent: (discountPercent != null && discountPercent > 0)
+              ? discountPercent
+              : null,
           medicineDescription: _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
           medicineComposition: _compositionController.text.isNotEmpty ? _compositionController.text : null,
           precautions: precautionsJson,
           photoBytes: _selectedPhoto?.bytes,
           photoFileName: _selectedPhoto?.name,
         );
+        ok = created != null;
       } else {
-        // Update
-        await notifier.updateMedicine(
+        final updated = await notifier.updateMedicine(
           medicineId: widget.medicine!.medicineId,
           medicineName: _nameController.text,
           medicineCategory: _categoryController.text,
           medicineQuantity: _quantityController.text,
           mrp: mrp,
+          discountPercent: discountPercent ?? 0,
           medicineDescription: _descriptionController.text,
           medicineComposition: _compositionController.text,
           precautions: precautionsJson,
           photoBytes: _selectedPhoto?.bytes,
           photoFileName: _selectedPhoto?.name,
         );
+        ok = updated != null;
+      }
+
+      if (!ok && mounted) {
+        final message =
+            ref.read(medicineNotifierProvider).error ?? 'Request failed';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
+        );
+        return;
       }
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.medicine == null 
-              ? 'Medicine created successfully' 
-              : 'Medicine updated successfully'),
+            content: Text(widget.medicine == null
+                ? 'Medicine created successfully'
+                : 'Medicine updated successfully'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -216,6 +243,21 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
                             validator: (value) {
                               if (value == null || value.isEmpty) return 'Required field';
                               if (double.tryParse(value) == null) return 'Enter a valid number';
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _discountController,
+                            decoration: AppTheme.inputDecoration('Discount % (optional)'),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) return null;
+                              final d = double.tryParse(value.trim());
+                              if (d == null) return 'Enter a valid number';
+                              if (d < 0 || d > 100) return 'Must be between 0 and 100';
                               return null;
                             },
                           ),

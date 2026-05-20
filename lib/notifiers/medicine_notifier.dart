@@ -25,6 +25,7 @@ class MedicineState {
   MedicineState copyWith({
     bool? isLoading,
     String? error,
+    bool clearError = false,
     List<Medicine>? medicines,
     List<Medicine>? filteredMedicines,
     int? total,
@@ -33,7 +34,7 @@ class MedicineState {
   }) {
     return MedicineState(
       isLoading: isLoading ?? this.isLoading,
-      error: error,
+      error: clearError ? null : (error ?? this.error),
       medicines: medicines ?? this.medicines,
       filteredMedicines: filteredMedicines ?? this.filteredMedicines,
       total: total ?? this.total,
@@ -51,7 +52,7 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
   }
 
   Future<void> fetchMedicines({int? page, int? limit}) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final p = page ?? state.currentPage;
       final l = limit ?? state.limit;
@@ -89,9 +90,10 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
 
     if (priceRange != null && priceRange != 'All') {
       filtered = filtered.where((m) {
-        if (priceRange == 'Under 100') return m.mrp < 100;
-        if (priceRange == '100-500') return m.mrp >= 100 && m.mrp <= 500;
-        if (priceRange == 'Above 500') return m.mrp > 500;
+        final price = m.finalSellingPrice;
+        if (priceRange == 'Under 100') return price < 100;
+        if (priceRange == '100-500') return price >= 100 && price <= 500;
+        if (priceRange == 'Above 500') return price > 500;
         return true;
       }).toList();
     }
@@ -104,19 +106,21 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
     required String medicineCategory,
     required String medicineQuantity,
     required double mrp,
+    double? discountPercent,
     String? medicineDescription,
     String? medicineComposition,
     String? precautions,
     Uint8List? photoBytes,
     String? photoFileName,
   }) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final newMedicine = await _services.createMedicine(
         medicineName: medicineName,
         medicineCategory: medicineCategory,
         medicineQuantity: medicineQuantity,
         mrp: mrp,
+        discountPercent: discountPercent,
         medicineDescription: medicineDescription,
         medicineComposition: medicineComposition,
         precautions: precautions,
@@ -140,13 +144,14 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
     String? medicineCategory,
     String? medicineQuantity,
     double? mrp,
+    double? discountPercent,
     String? medicineDescription,
     String? medicineComposition,
     String? precautions,
     Uint8List? photoBytes,
     String? photoFileName,
   }) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final updatedMedicine = await _services.updateMedicine(
         medicineId: medicineId,
@@ -154,6 +159,7 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
         medicineCategory: medicineCategory,
         medicineQuantity: medicineQuantity,
         mrp: mrp,
+        discountPercent: discountPercent,
         medicineDescription: medicineDescription,
         medicineComposition: medicineComposition,
         precautions: precautions,
@@ -172,7 +178,7 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
   }
 
   Future<bool> deleteMedicines(List<String> medicineIds) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _services.deleteMedicines(medicineIds);
       await fetchMedicines(page: 1); // Refresh list
