@@ -13,12 +13,14 @@ class CreateUpdateMedicineCard extends ConsumerStatefulWidget {
   const CreateUpdateMedicineCard({super.key, this.medicine});
 
   @override
-  ConsumerState<CreateUpdateMedicineCard> createState() => _CreateUpdateMedicineCardState();
+  ConsumerState<CreateUpdateMedicineCard> createState() =>
+      _CreateUpdateMedicineCardState();
 }
 
-class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineCard> {
+class _CreateUpdateMedicineCardState
+    extends ConsumerState<CreateUpdateMedicineCard> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _nameController;
   late TextEditingController _categoryController;
   late TextEditingController _quantityController;
@@ -35,22 +37,36 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.medicine?.medicineName ?? '');
-    _categoryController = TextEditingController(text: widget.medicine?.medicineCategory ?? '');
-    _quantityController = TextEditingController(text: widget.medicine?.medicineQuantity ?? '');
-    _mrpController = TextEditingController(text: widget.medicine?.mrp.toString() ?? '');
+    _nameController = TextEditingController(
+      text: widget.medicine?.medicineName ?? '',
+    );
+    _categoryController = TextEditingController(
+      text: widget.medicine?.medicineCategory ?? '',
+    );
+    _quantityController = TextEditingController(
+      text: widget.medicine?.medicineQuantity ?? '',
+    );
+    _mrpController = TextEditingController(
+      text: widget.medicine?.mrp.toString() ?? '',
+    );
     _discountController = TextEditingController(
       text: widget.medicine?.discountPercent != null
           ? widget.medicine!.discountPercent!.toString()
           : '',
     );
-    _descriptionController = TextEditingController(text: widget.medicine?.medicineDescription ?? '');
-    _compositionController = TextEditingController(text: widget.medicine?.medicineComposition ?? '');
-    
+    _descriptionController = TextEditingController(
+      text: widget.medicine?.medicineDescription ?? '',
+    );
+    _compositionController = TextEditingController(
+      text: widget.medicine?.medicineComposition ?? '',
+    );
+
     String precautionsText = '';
     if (widget.medicine != null) {
       precautionsText = widget.medicine!.precautions.join(', ');
-      _prescriptionRequired = widget.medicine!.prescriptionRequired == 'true' ? 'true' : 'false';
+      _prescriptionRequired = widget.medicine!.prescriptionRequired == 'true'
+          ? 'true'
+          : 'false';
     }
     _precautionsController = TextEditingController(text: precautionsText);
   }
@@ -99,7 +115,7 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
           .map((e) => e.trim())
           .where((e) => e.isNotEmpty)
           .toList();
-          
+
       final precautionsJson = jsonEncode(precautionsList);
 
       final notifier = ref.read(medicineNotifierProvider.notifier);
@@ -114,8 +130,12 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
           discountPercent: (discountPercent != null && discountPercent > 0)
               ? discountPercent
               : null,
-          medicineDescription: _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
-          medicineComposition: _compositionController.text.isNotEmpty ? _compositionController.text : null,
+          medicineDescription: _descriptionController.text.isNotEmpty
+              ? _descriptionController.text
+              : null,
+          medicineComposition: _compositionController.text.isNotEmpty
+              ? _compositionController.text
+              : null,
           precautions: precautionsJson,
           prescriptionRequired: _prescriptionRequired,
           photoBytes: _selectedPhoto?.bytes,
@@ -153,9 +173,11 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.medicine == null
-                ? 'Medicine created successfully'
-                : 'Medicine updated successfully'),
+            content: Text(
+              widget.medicine == null
+                  ? 'Medicine created successfully'
+                  : 'Medicine updated successfully',
+            ),
             backgroundColor: AppColors.success,
           ),
         );
@@ -163,10 +185,7 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -179,7 +198,9 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: MediaQuery.of(context).size.width > 600 ? 600 : MediaQuery.of(context).size.width * 0.9,
+      width: MediaQuery.of(context).size.width > 600
+          ? 600
+          : MediaQuery.of(context).size.width * 0.9,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -193,8 +214,13 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                widget.medicine == null ? 'Create New Medicine' : 'Update Medicine',
-                style: AppTextStyles.header.copyWith(fontSize: 24, fontWeight: FontWeight.w900),
+                widget.medicine == null
+                    ? 'Create New Medicine'
+                    : 'Update Medicine',
+                style: AppTextStyles.header.copyWith(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
@@ -214,8 +240,12 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
                         Expanded(
                           child: TextFormField(
                             controller: _nameController,
-                            decoration: AppTheme.inputDecoration('Medicine Name *'),
-                            validator: (value) => value == null || value.isEmpty ? 'Required field' : null,
+                            decoration: AppTheme.inputDecoration(
+                              'Medicine Name *',
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Required field'
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -223,7 +253,9 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
                           child: TextFormField(
                             controller: _categoryController,
                             decoration: AppTheme.inputDecoration('Category *'),
-                            validator: (value) => value == null || value.isEmpty ? 'Required field' : null,
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Required field'
+                                : null,
                           ),
                         ),
                       ],
@@ -234,8 +266,12 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
                         Expanded(
                           child: TextFormField(
                             controller: _quantityController,
-                            decoration: AppTheme.inputDecoration('Quantity * (e.g. 10 Tablets)'),
-                            validator: (value) => value == null || value.isEmpty ? 'Required field' : null,
+                            decoration: AppTheme.inputDecoration(
+                              'Quantity * (e.g. 10 Tablets)',
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Required field'
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -243,10 +279,16 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
                           child: TextFormField(
                             controller: _mrpController,
                             decoration: AppTheme.inputDecoration('MRP (₹) *'),
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             validator: (value) {
-                              if (value == null || value.isEmpty) return 'Required field';
-                              if (double.tryParse(value) == null) return 'Enter a valid number';
+                              if (value == null || value.isEmpty) {
+                                return 'Required field';
+                              }
+                              if (double.tryParse(value) == null) {
+                                return 'Enter a valid number';
+                              }
                               return null;
                             },
                           ),
@@ -255,13 +297,21 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
                         Expanded(
                           child: TextFormField(
                             controller: _discountController,
-                            decoration: AppTheme.inputDecoration('Discount % (optional)'),
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: AppTheme.inputDecoration(
+                              'Discount % (optional)',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             validator: (value) {
-                              if (value == null || value.trim().isEmpty) return null;
+                              if (value == null || value.trim().isEmpty) {
+                                return null;
+                              }
                               final d = double.tryParse(value.trim());
                               if (d == null) return 'Enter a valid number';
-                              if (d < 0 || d > 100) return 'Must be between 0 and 100';
+                              if (d < 0 || d > 100) {
+                                return 'Must be between 0 and 100';
+                              }
                               return null;
                             },
                           ),
@@ -286,17 +336,27 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
                         Expanded(
                           child: TextFormField(
                             controller: _precautionsController,
-                            decoration: AppTheme.inputDecoration('Precautions (comma separated)'),
+                            decoration: AppTheme.inputDecoration(
+                              'Precautions (comma separated)',
+                            ),
                           ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            decoration: AppTheme.inputDecoration('Prescription Required?'),
-                            value: _prescriptionRequired,
+                            decoration: AppTheme.inputDecoration(
+                              'Prescription Required?',
+                            ),
+                            initialValue: _prescriptionRequired,
                             items: const [
-                              DropdownMenuItem(value: 'true', child: Text('Yes')),
-                              DropdownMenuItem(value: 'false', child: Text('No')),
+                              DropdownMenuItem(
+                                value: 'true',
+                                child: Text('Yes'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'false',
+                                child: Text('No'),
+                              ),
                             ],
                             onChanged: (value) {
                               if (value != null) {
@@ -328,19 +388,29 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
                             child: _selectedPhoto != null
                                 ? ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
-                                    child: Image.memory(_selectedPhoto!.bytes!, fit: BoxFit.cover),
+                                    child: Image.memory(
+                                      _selectedPhoto!.bytes!,
+                                      fit: BoxFit.cover,
+                                    ),
                                   )
-                                : const Icon(IconsaxPlusLinear.image, color: AppColors.textTertiary),
+                                : const Icon(
+                                    IconsaxPlusLinear.image,
+                                    color: AppColors.textTertiary,
+                                  ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Medicine Photo', style: AppTextStyles.cardTitle),
+                                Text(
+                                  'Medicine Photo',
+                                  style: AppTextStyles.cardTitle,
+                                ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  _selectedPhoto?.name ?? 'No file selected. Supported formats: JPG, PNG',
+                                  _selectedPhoto?.name ??
+                                      'No file selected. Supported formats: JPG, PNG',
                                   style: AppTextStyles.caption,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -350,11 +420,20 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
                           ),
                           ElevatedButton.icon(
                             onPressed: _pickPhoto,
-                            icon: const Icon(IconsaxPlusLinear.document_upload, size: 16, color: Colors.white),
-                            label: const Text('UPLOAD', style: TextStyle(color: Colors.white)),
+                            icon: const Icon(
+                              IconsaxPlusLinear.document_upload,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                            label: const Text(
+                              'UPLOAD',
+                              style: TextStyle(color: Colors.white),
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                           ),
                         ],
@@ -373,17 +452,28 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
               onPressed: _isLoading ? null : _submitForm,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: _isLoading
                   ? const SizedBox(
                       width: 24,
                       height: 24,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
                     )
                   : Text(
-                      widget.medicine == null ? 'CREATE MEDICINE' : 'UPDATE MEDICINE',
-                      style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1),
+                      widget.medicine == null
+                          ? 'CREATE MEDICINE'
+                          : 'UPDATE MEDICINE',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 1,
+                      ),
                     ),
             ),
           ),

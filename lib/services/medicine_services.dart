@@ -232,10 +232,12 @@ class MedicineServices {
       final formDataMap = <String, dynamic>{};
 
       if (medicineName != null) formDataMap['medicine_name'] = medicineName;
-      if (medicineCategory != null)
+      if (medicineCategory != null) {
         formDataMap['medicine_category'] = medicineCategory;
-      if (medicineQuantity != null)
+      }
+      if (medicineQuantity != null) {
         formDataMap['medicine_quantity'] = medicineQuantity;
+      }
       if (mrp != null) formDataMap['mrp'] = mrp.toString();
       if (discountPercent != null) {
         formDataMap['discount_percent'] = discountPercent.toString();
@@ -247,8 +249,9 @@ class MedicineServices {
         formDataMap['medicine_composition'] = medicineComposition;
       }
       if (precautions != null) formDataMap['precautions'] = precautions;
-      if (prescriptionRequired != null)
+      if (prescriptionRequired != null) {
         formDataMap['prescription_required'] = prescriptionRequired;
+      }
 
       final formData = FormData.fromMap(formDataMap);
 
