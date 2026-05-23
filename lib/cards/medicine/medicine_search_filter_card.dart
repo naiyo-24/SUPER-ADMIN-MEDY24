@@ -119,18 +119,11 @@ class _MedicineSearchFilterCardState
                   ).copyWith(filled: true, fillColor: AppColors.background),
                   items: const [
                     DropdownMenuItem(value: 'All', child: Text('All Prices')),
-                    DropdownMenuItem(
-                      value: 'Under 100',
-                      child: Text('Under ₹100'),
-                    ),
-                    DropdownMenuItem(
-                      value: '100-500',
-                      child: Text('₹100 - ₹500'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Above 500',
-                      child: Text('Above ₹500'),
-                    ),
+                    DropdownMenuItem(value: 'Under 100', child: Text('Under ₹100')),
+                    DropdownMenuItem(value: '100-500', child: Text('₹100 - ₹500')),
+                    DropdownMenuItem(value: '500-1000', child: Text('₹500 - ₹1000')),
+                    DropdownMenuItem(value: '1000-5000', child: Text('₹1000 - ₹5000')),
+                    DropdownMenuItem(value: 'Above 5000', child: Text('Above ₹5000')),
                   ],
                   initialValue: _selectedPriceRange,
                   onChanged: (value) {

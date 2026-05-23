@@ -132,7 +132,7 @@ class _MedicineManagementScreenState
                     ],
                   ),
                   const SizedBox(height: 24),
-                  if (medicineState.filteredMedicines.isEmpty)
+                  if (medicineState.medicines.isEmpty)
                     _buildEmptyState()
                   else ...[
                     const MedicineManagementTableCard(),

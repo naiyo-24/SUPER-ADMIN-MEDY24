@@ -26,9 +26,11 @@ class ApiUrls {
   // Medicine Endpoints
   static const String medicineCreate = 'medicines/create';
   static const String medicineGetAll = 'medicines/get-all';
+  static const String medicineSearch = 'medicines/search';
   static const String medicineGetById = 'medicines/get-by';
   static const String medicineUpdateById = 'medicines/update-by';
   static const String medicineDeleteByIds = 'medicines/delete-by-ids';
+  static const String medicineImportStatus = 'medicines/import-status';
 
   // Terms & Conditions Endpoints
   static const String termsConditionsCreate = 'terms-conditions/create';

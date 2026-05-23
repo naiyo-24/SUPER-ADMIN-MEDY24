@@ -28,6 +28,7 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
   late TextEditingController _compositionController;
   late TextEditingController _precautionsController;
 
+  String _prescriptionRequired = 'false';
   PlatformFile? _selectedPhoto;
   bool _isLoading = false;
 
@@ -49,6 +50,7 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
     String precautionsText = '';
     if (widget.medicine != null) {
       precautionsText = widget.medicine!.precautions.join(', ');
+      _prescriptionRequired = widget.medicine!.prescriptionRequired == 'true' ? 'true' : 'false';
     }
     _precautionsController = TextEditingController(text: precautionsText);
   }
@@ -115,6 +117,7 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
           medicineDescription: _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
           medicineComposition: _compositionController.text.isNotEmpty ? _compositionController.text : null,
           precautions: precautionsJson,
+          prescriptionRequired: _prescriptionRequired,
           photoBytes: _selectedPhoto?.bytes,
           photoFileName: _selectedPhoto?.name,
         );
@@ -130,6 +133,7 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
           medicineDescription: _descriptionController.text,
           medicineComposition: _compositionController.text,
           precautions: precautionsJson,
+          prescriptionRequired: _prescriptionRequired,
           photoBytes: _selectedPhoto?.bytes,
           photoFileName: _selectedPhoto?.name,
         );
@@ -277,9 +281,31 @@ class _CreateUpdateMedicineCardState extends ConsumerState<CreateUpdateMedicineC
                       maxLines: 2,
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _precautionsController,
-                      decoration: AppTheme.inputDecoration('Precautions (comma separated)'),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _precautionsController,
+                            decoration: AppTheme.inputDecoration('Precautions (comma separated)'),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            decoration: AppTheme.inputDecoration('Prescription Required?'),
+                            value: _prescriptionRequired,
+                            items: const [
+                              DropdownMenuItem(value: 'true', child: Text('Yes')),
+                              DropdownMenuItem(value: 'false', child: Text('No')),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() => _prescriptionRequired = value);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 24),
                     Container(

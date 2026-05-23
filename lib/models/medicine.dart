@@ -11,6 +11,7 @@ class Medicine {
   final String? medicineDescription;
   final String? medicineComposition;
   final List<dynamic> precautions;
+  final String? prescriptionRequired;
   final String? medicinePhoto;
 
   Medicine({
@@ -24,6 +25,7 @@ class Medicine {
     this.medicineDescription,
     this.medicineComposition,
     required this.precautions,
+    this.prescriptionRequired,
     this.medicinePhoto,
   });
 
@@ -61,6 +63,7 @@ class Medicine {
       precautions: json['precautions'] is String
           ? jsonDecode(json['precautions'])
           : (json['precautions'] ?? []),
+      prescriptionRequired: json['prescription_required'],
       medicinePhoto: json['medicine_photo'],
     );
   }
@@ -77,6 +80,7 @@ class Medicine {
       'medicine_description': medicineDescription,
       'medicine_composition': medicineComposition,
       'precautions': precautions,
+      'prescription_required': prescriptionRequired,
       'medicine_photo': medicinePhoto,
     };
   }

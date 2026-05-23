@@ -72,7 +72,7 @@ class MedicineManagementTableCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final medicineState = ref.watch(medicineNotifierProvider);
-    final medicines = medicineState.filteredMedicines;
+    final medicines = medicineState.medicines;
 
     return Container(
       decoration: BoxDecoration(
@@ -110,6 +110,7 @@ class MedicineManagementTableCard extends ConsumerWidget {
             DataColumn(label: Text('DESCRIPTION')),
             DataColumn(label: Text('COMPOSITION')),
             DataColumn(label: Text('PRECAUTIONS')),
+            DataColumn(label: Text('PRESC')),
             DataColumn(label: Text('ACTIONS')),
           ],
           rows: medicines.map((medicine) {
@@ -245,6 +246,15 @@ class MedicineManagementTableCard extends ConsumerWidget {
                       medicine.precautions.map((e) => e.toString()).join(', '),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 2,
+                    ),
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    medicine.prescriptionRequired == 'true' ? 'Yes' : 'No',
+                    style: TextStyle(
+                      color: medicine.prescriptionRequired == 'true' ? AppColors.error : AppColors.success,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),

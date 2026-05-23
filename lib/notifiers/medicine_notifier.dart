@@ -7,19 +7,23 @@ class MedicineState {
   final bool isLoading;
   final String? error;
   final List<Medicine> medicines;
-  final List<Medicine> filteredMedicines;
   final int total;
   final int currentPage;
   final int limit;
+  final String? searchQuery;
+  final String? category;
+  final String? priceRange;
 
   MedicineState({
     this.isLoading = false,
     this.error,
     this.medicines = const [],
-    this.filteredMedicines = const [],
     this.total = 0,
     this.currentPage = 1,
     this.limit = 20,
+    this.searchQuery,
+    this.category,
+    this.priceRange,
   });
 
   MedicineState copyWith({
@@ -27,19 +31,23 @@ class MedicineState {
     String? error,
     bool clearError = false,
     List<Medicine>? medicines,
-    List<Medicine>? filteredMedicines,
     int? total,
     int? currentPage,
     int? limit,
+    String? searchQuery,
+    String? category,
+    String? priceRange,
   }) {
     return MedicineState(
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
       medicines: medicines ?? this.medicines,
-      filteredMedicines: filteredMedicines ?? this.filteredMedicines,
       total: total ?? this.total,
       currentPage: currentPage ?? this.currentPage,
       limit: limit ?? this.limit,
+      searchQuery: searchQuery ?? this.searchQuery,
+      category: category ?? this.category,
+      priceRange: priceRange ?? this.priceRange,
     );
   }
 }
@@ -56,49 +64,93 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
     try {
       final p = page ?? state.currentPage;
       final l = limit ?? state.limit;
-      final result = await _services.getAllMedicines(page: p, limit: l);
+
+      Map<String, dynamic> result;
+      if ((state.searchQuery != null && state.searchQuery!.isNotEmpty) ||
+          (state.category != null && state.category != 'All') ||
+          (state.priceRange != null && state.priceRange != 'All')) {
+        List<String>? priceRanges;
+        if (state.priceRange != null && state.priceRange != 'All') {
+          if (state.priceRange == 'Under 100') {
+            priceRanges = ['0-100'];
+          } else if (state.priceRange == '100-500') {
+            priceRanges = ['100-500'];
+          } else if (state.priceRange == '500-1000') {
+            priceRanges = ['500-1000'];
+          } else if (state.priceRange == '1000-5000') {
+            priceRanges = ['1000-5000'];
+          } else if (state.priceRange == 'Above 5000') {
+            priceRanges = ['5000+'];
+          }
+        }
+
+        result = await _services.searchMedicines(
+          searchTerm: state.searchQuery,
+          category: state.category == 'All' ? null : state.category,
+          priceRange: priceRanges,
+          page: p,
+          limit: l,
+        );
+      } else {
+        result = await _services.getAllMedicines(page: p, limit: l);
+      }
+
       state = state.copyWith(
         isLoading: false,
         medicines: result['medicines'],
-        filteredMedicines: result['medicines'],
         total: result['total'],
         currentPage: result['page'],
         limit: result['limit'],
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   void filterMedicines({String? query, String? category, String? priceRange}) {
-    var filtered = state.medicines;
+    state = state.copyWith(
+      searchQuery: query,
+      category: category,
+      priceRange: priceRange,
+      currentPage: 1, // reset to page 1 on new search
+    );
+    fetchMedicines(page: 1);
+  }
 
-    if (query != null && query.isNotEmpty) {
-      final lowerQuery = query.toLowerCase();
-      filtered = filtered.where((m) {
-        return m.medicineName.toLowerCase().contains(lowerQuery) ||
-               m.medicineId.toLowerCase().contains(lowerQuery);
-      }).toList();
+  Future<Map<String, dynamic>?> uploadCsv(
+    Uint8List fileBytes,
+    String fileName,
+  ) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final initialResult = await _services.uploadMedicinesCsv(
+        fileBytes,
+        fileName,
+      );
+      final jobId = initialResult['job_id'];
+
+      if (jobId == null) {
+        throw Exception("No job ID returned from server.");
+      }
+
+      // Poll for status
+      while (true) {
+        await Future.delayed(const Duration(seconds: 2));
+        final statusResult = await _services.checkImportStatus(jobId);
+        final status = statusResult['status'];
+
+        if (status == 'completed') {
+          await fetchMedicines(page: 1); // Refresh list
+          return statusResult['results'];
+        } else if (status == 'failed') {
+          throw Exception(statusResult['error'] ?? 'Import failed');
+        }
+        // If status is 'queued' or 'processing', continue polling
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return null;
     }
-
-    if (category != null && category != 'All') {
-      filtered = filtered.where((m) => m.medicineCategory == category).toList();
-    }
-
-    if (priceRange != null && priceRange != 'All') {
-      filtered = filtered.where((m) {
-        final price = m.finalSellingPrice;
-        if (priceRange == 'Under 100') return price < 100;
-        if (priceRange == '100-500') return price >= 100 && price <= 500;
-        if (priceRange == 'Above 500') return price > 500;
-        return true;
-      }).toList();
-    }
-
-    state = state.copyWith(filteredMedicines: filtered);
   }
 
   Future<Medicine?> createMedicine({
@@ -110,6 +162,7 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
     String? medicineDescription,
     String? medicineComposition,
     String? precautions,
+    String? prescriptionRequired,
     Uint8List? photoBytes,
     String? photoFileName,
   }) async {
@@ -124,16 +177,14 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
         medicineDescription: medicineDescription,
         medicineComposition: medicineComposition,
         precautions: precautions,
+        prescriptionRequired: prescriptionRequired,
         photoBytes: photoBytes,
         photoFileName: photoFileName,
       );
       await fetchMedicines(page: 1); // Refresh list
       return newMedicine;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       return null;
     }
   }
@@ -148,6 +199,7 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
     String? medicineDescription,
     String? medicineComposition,
     String? precautions,
+    String? prescriptionRequired,
     Uint8List? photoBytes,
     String? photoFileName,
   }) async {
@@ -163,16 +215,14 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
         medicineDescription: medicineDescription,
         medicineComposition: medicineComposition,
         precautions: precautions,
+        prescriptionRequired: prescriptionRequired,
         photoBytes: photoBytes,
         photoFileName: photoFileName,
       );
       await fetchMedicines(page: state.currentPage); // Refresh list
       return updatedMedicine;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       return null;
     }
   }
@@ -184,10 +234,7 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
       await fetchMedicines(page: 1); // Refresh list
       return true;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       return false;
     }
   }
